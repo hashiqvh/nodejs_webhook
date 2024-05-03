@@ -27,19 +27,18 @@ wss.on("connection", (ws) => {
 app.post("/webhook", (req, res) => {
   const webhookSignature = req.get("x-razorpay-signature");
   const { body } = req;
-  console.error(body);
+  const key="qwerasdfzxcv321";
+  console.error("Invalid webhook signature");
   try {
-    // Verify the webhook signature
-    const isValidSignature = razorpayInstance.validateWebhookSignature(
-      body,
-      webhookSignature,
-      "qwerasdfzxcv321"
-    ); // Replace 'your_webhook_secret' with your actual webhook secret
-    if (!isValidSignature) {
-      console.error("Invalid webhook signature");
-      return res.status(400).end();
-    }
+    var message = req.body;
+    const received_signature = req.get('x-razorpay-signature');
 
+    var expected_signature = crypto.createHmac('sha256', key).update(JSON.stringify(message)).digest('hex');
+
+    if (received_signature == expected_signature) {
+        const json_resp = req.body;
+        console.log(json_resp);
+    }
     // Process the webhook event
     console.log("Webhook event received:", body);
     // Handle the webhook event according to your requirements
