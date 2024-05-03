@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const Razorpay = require("razorpay");
 const WebSocket = require("ws");
 const crypto = require("crypto");
-const rawBody = require("express-raw-body");
+
 
 const app = express();
 const PORT = process.env.PORT || "3000";
@@ -17,14 +17,7 @@ const razorpayInstance = new Razorpay({
 // Middleware to parse JSON request body
 app.use(bodyParser.json());
 
-// Middleware to parse raw request body
-app.use(
-  rawBody({
-    length: "0kb", // No size limit for the raw body
-    limit: "1mb", // Limit the size of the parsed body
-    encoding: "utf-8",
-  })
-);
+
 
 // Create a WebSocket server
 const wss = new WebSocket.Server({ port: 8080 }); // Use any available port
@@ -40,7 +33,7 @@ app.post("/webhook", (req, res) => {
 
   // Verify the webhook signature
   const key = "qwerasdfzxcv321";
-  const message = req.rawBody;
+  const message = req.body;
   const receivedSignature = req.get("x-razorpay-signature");
 
   const expectedSignature = crypto
