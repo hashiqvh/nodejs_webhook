@@ -2,6 +2,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const Razorpay = require("razorpay");
 const WebSocket = require("ws");
+const crypto = require("crypto");
+const rawBody = require("express-raw-body");
 
 const app = express();
 const PORT = process.env.PORT || "3000";
@@ -15,6 +17,15 @@ const razorpayInstance = new Razorpay({
 // Middleware to parse JSON request body
 app.use(bodyParser.json());
 
+// Middleware to parse raw request body
+app.use(
+  rawBody({
+    length: "0kb", // No size limit for the raw body
+    limit: "1mb", // Limit the size of the parsed body
+    encoding: "utf-8",
+  })
+);
+
 // Create a WebSocket server
 const wss = new WebSocket.Server({ port: 8080 }); // Use any available port
 
@@ -25,16 +36,20 @@ wss.on("connection", (ws) => {
 
 // Route to handle incoming webhook requests from Razorpay
 app.post("/webhook", (req, res) => {
-  const webhookSignature = req.get("x-razorpay-signature");
   const { body } = req;
 
+  // Verify the webhook signature
+  const key = "qwerasdfzxcv321";
+  const message = req.rawBody;
+  const receivedSignature = req.get("x-razorpay-signature");
+
+  const expectedSignature = crypto
+    .createHmac("sha256", key)
+    .update(message, "utf-8")
+    .digest("hex");
+
   try {
-    // Verify the webhook signature
-    const isValidSignature = razorpayInstance.validateWebhookSignature(
-      body,
-      webhookSignature,
-      "qwerasdfzxcv321"
-    ); // Replace 'your_webhook_secret' with your actual webhook secret
+    const isValidSignature = receivedSignature === expectedSignature;
     if (!isValidSignature) {
       console.error("Invalid webhook signature");
       return res.status(400).end();
@@ -58,9 +73,12 @@ app.post("/webhook", (req, res) => {
     res.status(500).end();
   }
 });
-app.get('/', function(req, res) {
-    res.status(200).send("Running")
+
+// Route to check if the server is running
+app.get("/", function (req, res) {
+  res.status(200).send("Server is running");
 });
+
 app.listen(PORT, () => {
   console.log("Server is Listening on Port ", PORT);
 });
