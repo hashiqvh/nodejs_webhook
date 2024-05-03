@@ -27,7 +27,7 @@ wss.on("connection", (ws) => {
 app.post("/webhook", (req, res) => {
   const webhookSignature = req.get("x-razorpay-signature");
   const { body } = req;
-
+  console.error(body);
   try {
     // Verify the webhook signature
     const isValidSignature = razorpayInstance.validateWebhookSignature(
