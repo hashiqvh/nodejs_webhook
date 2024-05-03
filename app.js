@@ -2,15 +2,14 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const Razorpay = require("razorpay");
 const WebSocket = require("ws");
-const crypto = require("crypto");
 
 const app = express();
 const PORT = process.env.PORT || "3000";
 
 // Initialize Razorpay instance with your API key and secret
 const razorpayInstance = new Razorpay({
-  key_id: "YOUR_KEY_ID", // Replace with your key_id
-  key_secret: "YOUR_KEY_SECRET", // Replace with your key_secret
+  key_id: "rzp_test_p7AwacNnXgx766", // Replace with your key_id
+  key_secret: "gzJt0sorYWtVfHVO3gsa3kyq", // Replace with your key_secret
 });
 
 // Middleware to parse JSON request body
@@ -25,24 +24,18 @@ wss.on("connection", (ws) => {
 });
 
 // Route to handle incoming webhook requests from Razorpay
-app.post("/webhook", async (req, res) => {
-  const { body, headers } = req;
-
-  // Verify the webhook signature
-  const key = "qwerasdfzxcv321"; // Replace with your webhook secret
-  const payload = JSON.stringify(body);
-  const signature = headers["x-razorpay-signature"];
+app.post("/webhook", (req, res) => {
+  const webhookSignature = req.get("x-razorpay-signature");
+  const { body } = req;
 
   try {
-    // Recreate the signature using the provided payload and secret key
-    const generatedSignature = crypto
-      .createHmac("sha256", key)
-      .update(payload)
-      .digest("hex");
-      console.log("Generated Signature:", generatedSignature);
-      console.log("Received Signature:", signature);
-    // Compare the generated signature with the received signature
-    if (signature !== generatedSignature) {
+    // Verify the webhook signature
+    const isValidSignature = razorpayInstance.validateWebhookSignature(
+      body,
+      webhookSignature,
+      "qwerasdfzxcv321"
+    ); // Replace 'your_webhook_secret' with your actual webhook secret
+    if (!isValidSignature) {
       console.error("Invalid webhook signature");
       return res.status(400).end();
     }
@@ -65,12 +58,9 @@ app.post("/webhook", async (req, res) => {
     res.status(500).end();
   }
 });
-
-// Route to check if the server is running
-app.get("/", function (req, res) {
-  res.status(200).send("Server is running");
+app.get('/', function(req, res) {
+    res.status(200).send("Running")
 });
-
 app.listen(PORT, () => {
   console.log("Server is Listening on Port ", PORT);
 });
