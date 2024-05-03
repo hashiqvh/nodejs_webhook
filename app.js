@@ -33,7 +33,7 @@ app.post("/webhook", (req, res) => {
     const isValidSignature = razorpayInstance.validateWebhookSignature(
       body,
       webhookSignature,
-      "your_webhook_secret"
+      "qwerasdfzxcv321"
     ); // Replace 'your_webhook_secret' with your actual webhook secret
     if (!isValidSignature) {
       console.error("Invalid webhook signature");
@@ -58,7 +58,9 @@ app.post("/webhook", (req, res) => {
     res.status(500).end();
   }
 });
-
+app.get('/', function(req, res) {
+    res.status(200).send("Running")
+});
 app.listen(PORT, () => {
   console.log("Server is Listening on Port ", PORT);
 });
