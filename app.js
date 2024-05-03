@@ -4,20 +4,17 @@ const Razorpay = require("razorpay");
 const WebSocket = require("ws");
 const crypto = require("crypto");
 
-
 const app = express();
 const PORT = process.env.PORT || "3000";
 
 // Initialize Razorpay instance with your API key and secret
 const razorpayInstance = new Razorpay({
-  key_id: "rzp_test_p7AwacNnXgx766", // Replace with your key_id
-  key_secret: "gzJt0sorYWtVfHVO3gsa3kyq", // Replace with your key_secret
+  key_id: "YOUR_KEY_ID", // Replace with your key_id
+  key_secret: "YOUR_KEY_SECRET", // Replace with your key_secret
 });
 
 // Middleware to parse JSON request body
 app.use(bodyParser.json());
-
-
 
 // Create a WebSocket server
 const wss = new WebSocket.Server({ port: 8080 }); // Use any available port
@@ -28,21 +25,22 @@ wss.on("connection", (ws) => {
 });
 
 // Route to handle incoming webhook requests from Razorpay
-app.post("/webhook", (req, res) => {
-  const { body } = req;
+app.post("/webhook", async (req, res) => {
+  const { body, headers } = req;
 
   // Verify the webhook signature
-  const key = "qwerasdfzxcv321";
-  const message = req.body;
-  const receivedSignature = req.get("x-razorpay-signature");
-
-  const expectedSignature = crypto
-    .createHmac("sha256", key)
-    .update(message, "utf-8")
-    .digest("hex");
+  const key = "qwerasdfzxcv321"; // Replace with your webhook secret
+  const payload = JSON.stringify(body);
+  const signature = headers["x-razorpay-signature"];
 
   try {
-    const isValidSignature = receivedSignature === expectedSignature;
+    // Verify the webhook signature using the Razorpay package
+    const isValidSignature = razorpayInstance.webhooks.verifySignature(
+      payload,
+      signature,
+      key
+    );
+
     if (!isValidSignature) {
       console.error("Invalid webhook signature");
       return res.status(400).end();
