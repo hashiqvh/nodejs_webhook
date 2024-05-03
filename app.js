@@ -8,8 +8,8 @@ const PORT = process.env.PORT || "3000";
 
 // Initialize Razorpay instance with your API key and secret
 const razorpayInstance = new Razorpay({
-  key_id: "rzp_test_fiIwmRET6CApc2", // Replace with your key_id
-  key_secret: "YAEUthsup8SijNs3iveeVlL1", // Replace with your key_secret
+  key_id: "rzp_test_p7AwacNnXgx766", // Replace with your key_id
+  key_secret: "gzJt0sorYWtVfHVO3gsa3kyq", // Replace with your key_secret
 });
 
 // Middleware to parse JSON request body
