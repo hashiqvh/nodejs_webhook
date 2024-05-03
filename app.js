@@ -39,7 +39,8 @@ app.post("/webhook", async (req, res) => {
       .createHmac("sha256", key)
       .update(payload)
       .digest("hex");
-
+      console.log("Generated Signature:", generatedSignature);
+      console.log("Received Signature:", signature);
     // Compare the generated signature with the received signature
     if (signature !== generatedSignature) {
       console.error("Invalid webhook signature");
