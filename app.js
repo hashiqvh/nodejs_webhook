@@ -37,6 +37,7 @@ app.post("/webhook", (req, res) => {
 
     if (received_signature == expected_signature) {
         const json_resp = req.body;
+        console.log("key validation succeeded");
         console.log(json_resp);
     }
     // Process the webhook event
