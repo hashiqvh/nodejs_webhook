@@ -34,14 +34,14 @@ app.post("/webhook", async (req, res) => {
   const signature = headers["x-razorpay-signature"];
 
   try {
-    // Verify the webhook signature using the Razorpay package
-    const isValidSignature = razorpayInstance.webhooks.verifySignature(
-      payload,
-      signature,
-      key
-    );
+    // Recreate the signature using the provided payload and secret key
+    const generatedSignature = crypto
+      .createHmac("sha256", key)
+      .update(payload)
+      .digest("hex");
 
-    if (!isValidSignature) {
+    // Compare the generated signature with the received signature
+    if (signature !== generatedSignature) {
       console.error("Invalid webhook signature");
       return res.status(400).end();
     }
