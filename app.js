@@ -60,7 +60,7 @@ app.post("/webhook", async (req, res) => {
 
       // Convert the body to JSON string
       const jsonString = JSON.stringify(body);
-  
+
       // Send JSON string to all connected WebSocket clients
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
