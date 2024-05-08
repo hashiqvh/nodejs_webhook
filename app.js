@@ -15,7 +15,13 @@ const razorpayInstance = new Razorpay({
 // Middleware to parse JSON request body
 
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(
+  bodyParser.json({
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 // Create a WebSocket server
 const wss = new WebSocket.Server({ port: 8080 }); // Use any available port
 
@@ -25,7 +31,7 @@ wss.on("connection", (ws) => {
 });
 
 // Route to handle incoming webhook requests from Razorpay
-app.post("/webhook",async (req, res) => {
+app.post("/webhook", async (req, res) => {
   const webhookSignature = req.get("x-razorpay-signature");
   const { body } = req;
   const signature = req.body.razorpay_signature;
