@@ -32,11 +32,6 @@ wss.on("connection", (ws) => {
 
 // Route to handle incoming webhook requests from Razorpay
 app.post("/webhook", async (req, res) => {
-  const webhookSignature = req.get("x-razorpay-signature");
-  const { body } = req;
-  const signature = req.body.razorpay_signature;
-  const key = "qwerasdfzxcv321";
-
   try {
     let body = req.body;
     let received_signature = req.get("x-razorpay-signature");
@@ -48,7 +43,18 @@ app.post("/webhook", async (req, res) => {
       secret
     );
     if (success) {
-      console.error("Invalid webhook signature");
+      console.log("Invalid webhook Valid");
+    } else {
+      // Process the webhook event
+      console.log("Webhook event received:", body);
+      // Handle the webhook event according to your requirements
+
+      // Send the event to connected WebSocket clients
+      wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(body));
+        }
+      });
     }
     // Send response to Razorpay confirming receipt of webhook
     res.status(200).end();
