@@ -57,11 +57,22 @@ app.post("/webhook", async (req, res) => {
       console.log("Valid Razorpay webhook received");
     } else {
       let body = req.body;
+      // Extract required fields from the incoming JSON
+      const { event, payload } = body;
+      const { qr_code } = payload;
+      const { id, customer_id } = qr_code.entity;
 
-      // Convert the body to JSON string
-      const jsonString = JSON.stringify(body);
+      // Construct a new object with required fields
+      const newData = {
+        event: event,
+        customer_id: customer_id,
+        id: id,
+      };
 
-      // Send JSON string to all connected WebSocket clients
+      // Convert the new object to a JSON string
+      const jsonString = JSON.stringify(newData);
+
+      // Send the JSON string to all connected WebSocket clients
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(jsonString);
