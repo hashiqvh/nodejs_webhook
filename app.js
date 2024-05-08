@@ -27,18 +27,20 @@ wss.on("connection", (ws) => {
 app.post("/webhook", (req, res) => {
   const webhookSignature = req.get("x-razorpay-signature");
   const { body } = req;
-  const key="qwerasdfzxcv321";
+  const signature = req.body.razorpay_signature;
+  const key = "qwerasdfzxcv321";
   console.error("Invalid webhook signature");
   try {
     var message = req.body;
-    const received_signature = req.get('x-razorpay-signature');
+    const received_signature = req.get("x-razorpay-signature");
+    // Verify the payment signature
+    const isSignatureValid = razorpayInstance.validateWebhookSignature(
+      req.headers["x-razorpay-signature"],
+      req.rawBody
+    );
 
-    var expected_signature = crypto.createHmac('sha256', key).update(JSON.stringify(message)).digest('hex');
-
-    if (received_signature == expected_signature) {
-        const json_resp = req.body;
-        console.log("key validation succeeded");
-        console.log(json_resp);
+    if (!isSignatureValid) {
+      return res.status(400).send("Invalid payment callback");
     }
     // Process the webhook event
     console.log("Webhook event received:", body);
@@ -58,8 +60,8 @@ app.post("/webhook", (req, res) => {
     res.status(500).end();
   }
 });
-app.get('/', function(req, res) {
-    res.status(200).send("Running")
+app.get("/", function (req, res) {
+  res.status(200).send("Running");
 });
 app.listen(PORT, () => {
   console.log("Server is Listening on Port ", PORT);
