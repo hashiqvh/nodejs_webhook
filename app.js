@@ -3,17 +3,11 @@ const bodyParser = require("body-parser");
 const Razorpay = require("razorpay");
 const WebSocket = require("ws");
 const crypto = require("crypto");
+
 const app = express();
 const PORT = process.env.PORT || "3000";
 
-// Initialize Razorpay instance with your API key and secret
-const razorpayInstance = new Razorpay({
-  key_id: "rzp_live_mSzRKyaR7Kr1uS", // Replace with your key_id
-  key_secret: "yiCFU1DEjK7LgLDxLbDkMyXG", // Replace with your key_secret
-});
-
 // Middleware to parse JSON request body
-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   bodyParser.json({
@@ -22,12 +16,29 @@ app.use(
     },
   })
 );
-// Create a WebSocket server
-const wss = new WebSocket.Server({ port: 8080 }); // Use any available port
 
-// WebSocket connection handler
+// Create a WebSocket server
+const wss = new WebSocket.Server({ noServer: true });
+
 wss.on("connection", (ws) => {
   console.log("WebSocket client connected");
+
+  // You can handle messages received from clients here
+  ws.on("message", (message) => {
+    console.log("Received message from client:", message);
+  });
+});
+
+// Attach WebSocket server to the HTTP server created by Express
+const server = app.listen(PORT, () => {
+  console.log("Server is Listening on Port ", PORT);
+});
+
+// Upgrade HTTP server to WebSocket server for handling WebSocket connections
+server.on("upgrade", (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit("connection", ws, request);
+  });
 });
 
 // Route to handle incoming webhook requests from Razorpay
@@ -43,19 +54,11 @@ app.post("/webhook", async (req, res) => {
       secret
     );
     if (success) {
-      console.log("Invalid webhook Valid");
+      console.log("Valid Razorpay webhook received");
     } else {
-      // Process the webhook event
-      console.log("Webhook event received:", body);
-      // Handle the webhook event according to your requirements
-
-      // Send the event to connected WebSocket clients
-      wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify(body));
-        }
-      });
+      console.log("Invalid Razorpay webhook received:", body);
     }
+
     // Send response to Razorpay confirming receipt of webhook
     res.status(200).end();
   } catch (error) {
@@ -63,9 +66,8 @@ app.post("/webhook", async (req, res) => {
     res.status(500).end();
   }
 });
+
+// Route to handle root request
 app.get("/", function (req, res) {
   res.status(200).send("Running");
-});
-app.listen(PORT, () => {
-  console.log("Server is Listening on Port ", PORT);
 });
