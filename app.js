@@ -56,10 +56,15 @@ app.post("/webhook", async (req, res) => {
     if (success) {
       console.log("Valid Razorpay webhook received");
     } else {
-      // Send message to all connected WebSocket clients
+      let body = req.body;
+
+      // Convert the body to JSON string
+      const jsonString = JSON.stringify(body);
+  
+      // Send JSON string to all connected WebSocket clients
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(body);
+          client.send(jsonString);
         }
       });
       console.log("Invalid Razorpay webhook received:", body);
