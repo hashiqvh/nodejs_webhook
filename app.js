@@ -36,30 +36,20 @@ app.post("/webhook", async (req, res) => {
   const { body } = req;
   const signature = req.body.razorpay_signature;
   const key = "qwerasdfzxcv321";
-  console.error("Invalid webhook signature");
+
   try {
-    var message = req.body;
-    const received_signature = req.get("x-razorpay-signature");
-    // Verify the payment signature
-    const isSignatureValid = razorpayInstance.validateWebhookSignature(
-      req.headers["x-razorpay-signature"],
-      req.rawBody
+    let body = req.body;
+    let received_signature = req.get("x-razorpay-signature");
+    let secret = "qwerasdfzxcv321";
+
+    var success = Razorpay.validateWebhookSignature(
+      JSON.stringify(body),
+      received_signature,
+      secret
     );
-
-    if (!isSignatureValid) {
-      return res.status(400).send("Invalid payment callback");
+    if (success) {
+      console.error("Invalid webhook signature");
     }
-    // Process the webhook event
-    console.log("Webhook event received:", body);
-    // Handle the webhook event according to your requirements
-
-    // Send the event to connected WebSocket clients
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(body));
-      }
-    });
-
     // Send response to Razorpay confirming receipt of webhook
     res.status(200).end();
   } catch (error) {
