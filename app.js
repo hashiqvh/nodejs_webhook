@@ -20,7 +20,7 @@ app.use(
 const wss = new WebSocket.Server({ noServer: true });
 
 wss.on("connection", (ws) => {
-  console.log("WebSocket client connected");
+  console.log("WebSocket client connected",ws.headers);
 
   // Handle messages received from clients
   ws.on("message", (message) => {
@@ -84,7 +84,9 @@ app.post("/webhook", checkDuplicateEvent, async (req, res) => {
       }
     });
 
-    console.log(`Processed event with ID ${req.headers["x-razorpay-event-id"]}`);
+    console.log(
+      `Processed event with ID ${req.headers["x-razorpay-event-id"]}`
+    );
 
     // Send response to Razorpay confirming receipt of webhook
     res.status(200).end();
