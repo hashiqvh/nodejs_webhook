@@ -45,15 +45,16 @@ server.on("upgrade", (request, socket, head) => {
 app.post("/webhook", async (req, res) => {
   try {
     let body = req.body;
-    let received_signature = req.get("x-razorpay-signature");
+
     let secret = "qwerasdfzxcv321";
 
-    var success = Razorpay.validateWebhookSignature(
-      JSON.stringify(body),
-      received_signature,
-      secret
-    );
-    if (success) {
+    const signature = req.headers["x-razorpay-signature"];
+    const generatedSignature = crypto
+      .createHmac("sha256", secret)
+      .update(JSON.stringify(req.body))
+      .digest("hex");
+
+    if (signature === generatedSignature) {
       console.log("Valid Razorpay webhook received");
     } else {
       let body = req.body;
