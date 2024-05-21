@@ -69,7 +69,7 @@ app.post("/webhook", checkDuplicateEvent, async (req, res) => {
       secret
     );
     console.log(signature);
-    console.log(generatedSignature);
+    console.log(isValid);
     if (isValid) {
       console.log("Valid Razorpay webhook received");
     } else {
