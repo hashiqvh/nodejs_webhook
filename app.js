@@ -42,20 +42,21 @@ server.on("upgrade", (request, socket, head) => {
 });
 
 // Route to handle incoming webhook requests from Razorpay
-app.post("/webhook", async (req, res) => {
+app.post("/webhook", checkDuplicateEvent, async (req, res) => {
   try {
     let body = req.body;
 
     let secret = "qwerasdfzxcv321";
 
     const signature = req.headers["x-razorpay-signature"];
-    const generatedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(JSON.stringify(req.body))
-      .digest("hex");
+    const isValid = await validateWebhookSignature(
+      JSON.stringify(req.body),
+      signature,
+      secret
+    );
     console.log(signature);
     console.log(generatedSignature);
-    if (signature === generatedSignature) {
+    if (isValid) {
       console.log("Valid Razorpay webhook received");
     } else {
       let body = req.body;
@@ -90,7 +91,21 @@ app.post("/webhook", async (req, res) => {
     res.status(500).end();
   }
 });
+const processedEventIds = new Set();
 
+const checkDuplicateEvent = (req, res, next) => {
+  const eventId = req.headers["x-razorpay-event-id"];
+
+  if (processedEventIds.has(eventId)) {
+    // Duplicate event, skip processing
+    console.log(`Duplicate event with ID ${eventId}. Skipping processing.`);
+    res.status(200).send();
+  } else {
+    // Not a duplicate, continue with the next middleware or route handler
+    processedEventIds.add(eventId);
+    next();
+  }
+};
 // Route to handle root request
 app.get("/", function (req, res) {
   res.status(200).send("Running");
