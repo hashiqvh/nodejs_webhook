@@ -40,7 +40,21 @@ server.on("upgrade", (request, socket, head) => {
     wss.emit("connection", ws, request);
   });
 });
+const processedEventIds = new Set();
 
+const checkDuplicateEvent = (req, res, next) => {
+  const eventId = req.headers["x-razorpay-event-id"];
+
+  if (processedEventIds.has(eventId)) {
+    // Duplicate event, skip processing
+    console.log(`Duplicate event with ID ${eventId}. Skipping processing.`);
+    res.status(200).send();
+  } else {
+    // Not a duplicate, continue with the next middleware or route handler
+    processedEventIds.add(eventId);
+    next();
+  }
+};
 // Route to handle incoming webhook requests from Razorpay
 app.post("/webhook", checkDuplicateEvent, async (req, res) => {
   try {
@@ -91,21 +105,7 @@ app.post("/webhook", checkDuplicateEvent, async (req, res) => {
     res.status(500).end();
   }
 });
-const processedEventIds = new Set();
 
-const checkDuplicateEvent = (req, res, next) => {
-  const eventId = req.headers["x-razorpay-event-id"];
-
-  if (processedEventIds.has(eventId)) {
-    // Duplicate event, skip processing
-    console.log(`Duplicate event with ID ${eventId}. Skipping processing.`);
-    res.status(200).send();
-  } else {
-    // Not a duplicate, continue with the next middleware or route handler
-    processedEventIds.add(eventId);
-    next();
-  }
-};
 // Route to handle root request
 app.get("/", function (req, res) {
   res.status(200).send("Running");
