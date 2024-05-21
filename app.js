@@ -53,7 +53,7 @@ app.post("/webhook", async (req, res) => {
       .createHmac("sha256", secret)
       .update(JSON.stringify(req.body))
       .digest("hex");
-
+console.log(signature);
     if (signature === generatedSignature) {
       console.log("Valid Razorpay webhook received");
     } else {
