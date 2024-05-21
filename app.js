@@ -58,16 +58,14 @@ const checkDuplicateEvent = (req, res, next) => {
 // Route to handle incoming webhook requests from Razorpay
 app.post("/webhook", checkDuplicateEvent, async (req, res) => {
   try {
-    let body = req.body;
+    let secret_key = "qwerasdfzxcv321";
+    // do a validation
 
-    let secret = "qwerasdfzxcv321";
-    const crypto = require("crypto");
+    const data = crypto.createHmac("sha256", secret_key);
 
-    const shasum = crypto.createHmac("sha256", secret);
-    shasum.update(JSON.stringify(req.body));
-    const digest = shasum.digest("hex");
+    data.update(JSON.stringify(req.body));
 
-    console.log(digest, req.headers["x-razorpay-signature"]);
+    const digest = data.digest("hex");
 
     if (digest === req.headers["x-razorpay-signature"]) {
       console.log("Valid Razorpay webhook received");
@@ -83,6 +81,7 @@ app.post("/webhook", checkDuplicateEvent, async (req, res) => {
         event: event,
         customer_id: customer_id,
         id: id,
+        event_id: req.headers["x-razorpay-event-id"],
       };
 
       // Convert the new object to a JSON string
@@ -94,6 +93,8 @@ app.post("/webhook", checkDuplicateEvent, async (req, res) => {
           client.send(jsonString);
         }
       });
+      const eventId = req.headers["x-razorpay-event-id"];
+      console.log(eventId);
       console.log("Invalid Razorpay webhook received:", body);
     }
 
