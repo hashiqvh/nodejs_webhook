@@ -61,16 +61,15 @@ app.post("/webhook", checkDuplicateEvent, async (req, res) => {
     let body = req.body;
 
     let secret = "qwerasdfzxcv321";
+    const crypto = require("crypto");
 
-    const signature = req.headers["x-razorpay-signature"];
-    const isValid = await validateWebhookSignature(
-      JSON.stringify(req.body),
-      signature,
-      secret
-    );
-    console.log(signature);
-    console.log(isValid);
-    if (isValid) {
+    const shasum = crypto.createHmac("sha256", secret);
+    shasum.update(JSON.stringify(req.body));
+    const digest = shasum.digest("hex");
+
+    console.log(digest, req.headers["x-razorpay-signature"]);
+
+    if (digest === req.headers["x-razorpay-signature"]) {
       console.log("Valid Razorpay webhook received");
     } else {
       let body = req.body;
